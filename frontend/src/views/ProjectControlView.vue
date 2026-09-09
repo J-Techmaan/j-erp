@@ -86,7 +86,7 @@ async function load() {
     }
   } catch (e) { error.value = humanError(e) } finally { loading.value = false }
 }
-function switchTab(kind: string) { if (projectId) void router.replace({ query: { ...route.query, view: kind } }); tab.value = kind; selected.value = null; formKind.value = ''; page.value = 0; search.value = ''; statusFilter.value = '' }
+async function switchTab(kind: string) { if (projectId) { await router.replace({ query: { ...route.query, view: kind } }); if (route.query.view !== kind) return } tab.value = kind; selected.value = null; formKind.value = ''; page.value = 0; search.value = ''; statusFilter.value = '' }
 function edit(kind: string, row?: ProjectRow) {
   const spec = meta.value?.schemas[kind]; if (!spec) return
   formKind.value = kind; editId.value = row?.id || null; editRevision.value = row?.revision || null
@@ -121,8 +121,8 @@ async function seed() {
   try { const { data } = await api.post<ProjectRow>('/projects/seed/karaoke'); await router.push(`/projects/${data.id}`) }
   catch (e) { error.value = humanError(e) } finally { busy.value = false }
 }
-function open(kind: string, row: ProjectRow) { switchTab(kind); selected.value = row }
-function issueEco(row: ProjectRow) { switchTab('eco'); edit('eco'); form.value.linked_ecr = row.id; form.value.title = row.title; form.value.affected_tasks = row.affected_tasks || []; form.value.affected_documents = row.affected_documents || [] }
+async function open(kind: string, row: ProjectRow) { await switchTab(kind); if (tab.value === kind) selected.value = row }
+async function issueEco(row: ProjectRow) { await switchTab('eco'); edit('eco'); form.value.linked_ecr = row.id; form.value.title = row.title; form.value.affected_tasks = row.affected_tasks || []; form.value.affected_documents = row.affected_documents || [] }
 async function addComment() {
   if (!selected.value || !comment.value.trim()) return
   busy.value = true
@@ -148,6 +148,7 @@ const changeSteps = ['요청', '영향 분석', '검토', '승인', '실행', '�
 const changeStep = computed(() => linkedEco.value ? ({ OPEN: 4, IMPLEMENTING: 4, VERIFYING: 5, CLOSED: 6, FAILED: 4 }[String(linkedEco.value.implementation_status)] ?? 4) : ({ DRAFT: 0, SUBMITTED: 1, UNDER_REVIEW: 2, APPROVED: 3, REJECTED: 2, CANCELLED: 0 }[String(linkedEcr.value?.status)] ?? 0))
 const budgetCommitted = computed(() => (records.value.budget || []).filter(r => records.value.vendors?.some(v => v.id === r.vendor_id && v.status === 'CONTRACTED')).reduce((sum, r) => sum + Number(r.planned_amount || 0), 0))
 const schedule = computed(() => [...(records.value.milestones || []).map(row => ({ kind: 'milestones', row, date: String(row.forecast_date || row.planned_date || '') })), ...(records.value.tasks || []).map(row => ({ kind: 'tasks', row, date: String(row.due_date || '') }))].sort((a,b) => (a.date || '9999').localeCompare(b.date || '9999')))
+async function newRecord(kind: string) { await switchTab(kind); if (tab.value === kind) edit(kind) }
 const money = (value: string | number) => Number(value).toLocaleString('ko-KR') + '원'
 onMounted(load)
 </script>
@@ -159,7 +160,7 @@ onMounted(load)
   <template v-else>
     <header v-if="project && dashboard" class="workspace-header">
       <div class="workspace-context"><span>{{ project.project_code }}</span><span class="status-pill">{{ projectLabel(project.status) }}</span><b :class="`health-${dashboard.summary.health}`">{{ projectLabel(dashboard.summary.health) }}</b><span>진행 {{ dashboard.summary.progress }}%</span><span>{{ project.start_date || '시작일 미정' }} → {{ project.target_end_date || '목표일 미정' }}</span><b>{{ dashboard.summary.d_day == null ? '목표일 미정' : dashboard.summary.d_day >= 0 ? `D-${dashboard.summary.d_day}` : `${-dashboard.summary.d_day}일 지연` }}</b></div>
-      <div class="panel-toolbar"><nav class="workspace-nav" aria-label="프로젝트 관리 메뉴"><button v-for="(item, key) in sections" :key="key" :aria-current="section === key ? 'page' : undefined" @click="switchTab(Object.keys(item.tabs)[0]!)">{{ item.label }}</button></nav><div class="button-row"><button class="primary" @click="switchTab('tasks'); edit('tasks')">새 액션</button><button @click="switchTab('ecr'); edit('ecr')">변경 요청</button><button v-if="manager" @click="edit('projects', project)">프로젝트 설정</button></div></div>
+      <div class="panel-toolbar"><nav class="workspace-nav" aria-label="프로젝트 관리 메뉴"><button v-for="(item, key) in sections" :key="key" :aria-current="section === key ? 'page' : undefined" @click="switchTab(Object.keys(item.tabs)[0]!)">{{ item.label }}</button></nav><div class="button-row"><button class="primary" @click="newRecord('tasks')">새 액션</button><button @click="newRecord('ecr')">변경 요청</button><button v-if="manager" @click="edit('projects', project)">프로젝트 설정</button></div></div>
     </header>
     <nav v-if="project && Object.keys(sections[section]!.tabs).length > 1" class="workspace-subnav" aria-label="세부 관리 메뉴"><button v-for="(label, key) in sections[section]!.tabs" :key="key" :aria-current="tab === key || (tab === 'eco' && key === 'ecr') ? 'page' : undefined" @click="switchTab(key)">{{ label }}</button></nav>
     <div v-if="project && section === 'control' && !selected && !formKind" class="control-summary"><span>열린 위험 <b>{{ (records.risks || []).filter(r => r.status !== 'CLOSED').length }}</b></span><span>미해결 이슈 <b>{{ dashboard?.summary.open_issues }}</b></span><span>검토 중 변경 <b>{{ dashboard?.summary.open_ecr }}</b></span><span>실행 중 변경 <b>{{ dashboard?.summary.active_eco }}</b></span><span>의사결정 <b>{{ records.decisions?.length || 0 }}</b><small> · 확정 기록</small></span></div>
