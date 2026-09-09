@@ -1,0 +1,32 @@
+import { test, expect, request } from '@playwright/test'
+
+test('초대에서 회원가입과 로그인 후 원래 초대로 돌아와 가입', async ({ page }) => {
+  const owner = await request.newContext({ baseURL: 'http://127.0.0.1:5174', extraHTTPHeaders: { 'X-CSRF-Protection': '1' } })
+  const password = 'Invite-test-password-42'
+  await owner.post('/api/auth/signup', { data: { name: '초대자', email: 'invite-owner@example.com', password, password_confirm: password } })
+  const group = await (await owner.post('/api/groups', { data: { name: '초대 테스트' } })).json()
+  const invite = await (await owner.post(`/api/groups/${group.id}/invites`)).json()
+  const path = `/invite/${invite.token}`
+  await page.goto(path)
+  await expect(page.getByRole('heading', { name: '초대 테스트 그룹에 가입하시겠습니까?' })).toBeVisible()
+  await page.getByRole('link', { name: '회원가입', exact: true }).click()
+  await page.getByLabel('이름', { exact: true }).fill('초대받은 사람')
+  await page.getByLabel('이메일', { exact: true }).fill('invite-guest@example.com')
+  await page.getByLabel('비밀번호', { exact: true }).fill(password)
+  await page.getByLabel('비밀번호 확인', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '회원가입', exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/invite/${invite.token}$`))
+  await expect(page.getByRole('button', { name: '가입하기', exact: true })).toBeVisible()
+  await page.context().clearCookies()
+  await page.reload()
+  await page.getByRole('link', { name: '로그인', exact: true }).click()
+  await page.getByLabel('이메일', { exact: true }).fill('invite-guest@example.com')
+  await page.getByLabel('비밀번호', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '로그인', exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/invite/${invite.token}$`))
+  await page.getByRole('button', { name: '가입하기', exact: true }).click()
+  await expect(page.getByText('그룹에 가입했습니다.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '그룹으로 이동' }).click()
+  await expect(page).toHaveURL('http://127.0.0.1:5174/')
+  await owner.dispose()
+})
