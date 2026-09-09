@@ -285,6 +285,65 @@ dialog::backdrop { background: #152d2666; }
 .delete-group { margin-top: 10px; }
 @media (max-width: 600px) { .group-choice { grid-template-columns: 1fr; } }
 :root { --project-accent: #2463a8; }
+.project-workspace { max-width: 1320px; margin-inline: auto; }
+.workspace-header { border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.workspace-context { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; color: var(--muted); font-size: 12px; margin: 8px 0 20px; }
+.workspace-nav, .workspace-subnav { display: flex; flex-wrap: wrap; gap: 6px; }
+.workspace-nav button { border: 0; background: transparent; border-radius: 0; padding: 14px 18px; font-weight: 600; }
+.workspace-nav button[aria-current=page] { box-shadow: inset 0 -3px var(--green); color: var(--green); }
+.workspace-subnav { margin: 0 0 22px; }
+.workspace-subnav button { background: transparent; border-color: transparent; }
+.workspace-subnav button[aria-current=page] { background: var(--green-soft, #eaf3eb); color: var(--green); font-weight: 700; }
+.workspace-status { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; padding: 24px 0 32px; }
+.workspace-status > div, .workspace-status > button { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 0; text-align: left; }
+.workspace-status span, .budget-summary span { font-size: 12px; color: var(--muted); }
+.workspace-status strong { font-size: 26px; letter-spacing: -1px; }
+.workspace-status strong small { font-size: 15px; }
+.workspace-section { margin: 0 0 26px; padding: 24px; background: white; border-radius: 12px; }
+.workspace-section h2 { font-size: 18px; margin-bottom: 14px; }
+.workspace-section h2 small { font-size: 12px; color: var(--muted); margin-left: 8px; }
+.workspace-section.next-actions { border-top: none; }
+.project-workspace .action-hero { background: var(--green-soft, #edf5ef); border-color: var(--green); padding: 24px; }
+.action-hero strong { font-size: 22px; }
+.project-workspace .next-action:not(.action-hero) { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; }
+.attention:not(.needs-attention) { padding: 16px 24px; background: transparent; }
+.needs-attention { background: #fff8ed; border-left: 3px solid #bc791e; }
+.empty-state { color: var(--muted); padding: 24px 0; line-height: 1.8; }
+.status-pill { display: inline-block; font-size: 11px; padding: 4px 8px; background: #f1f3f2; border-radius: 20px; }
+.milestone-strip { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding: 0; }
+.milestone-strip button { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; text-align: left; width: 100%; height: 100%; border: 0; border-top: 3px solid var(--border); border-radius: 0; }
+.workstream-grid, .readiness-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+.workstream-grid button, .readiness-grid button { text-align: left; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 14px 0; }
+.workstream-grid button { display: block; }
+.project-workspace .next-action { align-items: flex-start; }
+.workstream-grid span, .readiness-grid button { display: flex; justify-content: space-between; gap: 10px; }
+.project-workspace progress { width: 100%; height: 5px; accent-color: var(--green); margin-top: 8px; }
+.activity-line { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.activity-line small { display: block; color: var(--muted); margin-top: 5px; }
+.control-summary, .budget-summary { display: flex; flex-wrap: wrap; gap: 20px 32px; margin: 22px 0; }
+.control-summary span { color: var(--muted); font-size: 12px; }
+.control-summary b { color: var(--text); margin-left: 8px; font-size: 20px; }
+.budget-summary > div { display: flex; flex-direction: column; gap: 10px; }
+.task-list, .change-list { display: grid; gap: 0; }
+.task-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 12px; text-align: left; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; }
+.task-card strong { font-size: 16px; }.task-card small, .task-card span { color: var(--muted); font-size: 12px; }
+.change-stepper { list-style: none; display: flex; flex-wrap: wrap; padding: 0; gap: 6px; margin: 24px 0; }
+.change-stepper li { flex: 1; min-width: 70px; padding: 12px 6px; text-align: center; background: #f3f4f3; color: var(--muted); border-radius: 6px; }
+.change-stepper li.current { background: var(--green); color: white; font-weight: 700; }.change-stepper li.complete { color: #15803d; background: #edf5ef; }
+.task-extra { padding: 20px 0; }.task-extra summary { cursor: pointer; font-weight: 600; }
+.schedule-list { list-style: none; padding: 0; }.schedule-list li { display: flex; gap: 24px; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 0; }
+.schedule-list time { color: var(--muted); min-width: 95px; }.schedule-list button { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 0; text-align: left; }
+.project-workspace button, .project-workspace h1 { overflow-wrap: anywhere; white-space: normal; }.project-workspace .panel-toolbar { flex-wrap: wrap; gap: 14px; }
+@media (max-width: 1050px) { .workspace-status { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .sidebar .group-switcher { flex: 0 0 140px; margin-bottom: 0; }
+  .workspace-status { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }.workspace-status strong { font-size: 23px; }
+  .workspace-section { padding: 18px; }.workspace-nav button { padding: 12px; }.workspace-context { gap: 8px 14px; }
+  .workstream-grid, .readiness-grid { grid-template-columns: 1fr; }.project-workspace .action-hero { padding: 18px; }.action-hero strong { font-size: 19px; }
+  .workspace-table table, .workspace-table tbody, .workspace-table tr, .workspace-table td { display: block; width: 100%; min-width: 0; }
+  .workspace-table thead { display: none; }.workspace-table tr { padding: 12px 0; border-bottom: 1px solid var(--border); }.workspace-table td { padding: 5px 8px; border: 0; white-space: normal; }
+  .workspace-table td:nth-child(2)::before { content: '상태 · '; color: var(--muted); }.workspace-table td:nth-child(3)::before { content: '담당자 · '; color: var(--muted); }
+}
 .project-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
 .project-tabs button { font-size: 12px; padding: 8px 12px; }
 .project-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; margin: 18px 0; }

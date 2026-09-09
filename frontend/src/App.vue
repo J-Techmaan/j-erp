@@ -57,6 +57,6 @@ onUnmounted(() => {
       <RouterLink to="/groups/settings" :class="{ active: route.path === '/groups/settings' }"><span>⚙</span> 그룹 관리</RouterLink>
       <div class="sidebar-note"><span class="status-dot"></span> 내 업무 공간<br /><small>전자결재 · 개인 일정</small></div>
     </aside>
-    <main class="main"><p v-if="logoutError" class="error" role="alert">{{ logoutError }}</p><RouterView :key="route.fullPath + auth.user.id" /></main>
+    <main class="main"><p v-if="logoutError" class="error" role="alert">{{ logoutError }}</p><RouterView :key="(route.path.startsWith('/projects') ? route.path : route.fullPath) + auth.user.id" /></main>
   </div>
 </template>
