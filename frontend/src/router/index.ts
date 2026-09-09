@@ -9,6 +9,7 @@ import DocumentDetailView from '../views/DocumentDetailView.vue'
 import CalendarView from '../views/CalendarView.vue'
 import GroupStartView from '../views/GroupStartView.vue'
 import GroupSettingsView from '../views/GroupSettingsView.vue'
+import ProjectControlView from '../views/ProjectControlView.vue'
 import { useGroupStore } from '../stores/groups'
 
 const router = createRouter({
@@ -20,6 +21,8 @@ const router = createRouter({
     { path: '/groups/start', component: GroupStartView },
     { path: '/groups/settings', component: GroupSettingsView },
     { path: '/', component: DashboardView },
+    { path: '/projects', component: ProjectControlView },
+    { path: '/projects/:projectId', component: ProjectControlView },
     { path: '/documents', component: DocumentsView },
     { path: '/documents/new', component: DocumentEditView },
     { path: '/documents/:id/edit', component: DocumentEditView },

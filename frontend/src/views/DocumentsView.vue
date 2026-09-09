@@ -6,7 +6,7 @@ import type { Document } from '../types'
 import DocumentTable from '../components/DocumentTable.vue'
 const route = useRoute(), router = useRouter()
 const scope = computed(() => route.query.scope === 'notified' ? 'group' : ['inbox', 'authored', 'group'].includes(String(route.query.scope)) ? String(route.query.scope) : 'authored')
-const titles: Record<string, string> = { inbox: '결재함', authored: '상신함', notified: '문서함' }
+const titles: Record<string, string> = { inbox: '결재함', authored: '상신함', group: '그룹 문서함' }
 const status = ref(''), items = ref<Document[]>([]), pending = ref<Document[]>([]), history = ref<Document[]>([])
 const page = ref(0), busy = ref(true), error = ref('')
 async function load(reset = false) {

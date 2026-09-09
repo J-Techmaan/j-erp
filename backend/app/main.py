@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm.exc import StaleDataError
 
-from app.api import attachments, auth, documents, groups, invites, schedules
+from app.api import attachments, auth, documents, groups, invites, schedules, projects
 from app.core.config import get_settings
 from app.core.database import Base, engine
 from app.core.migrations import add_group_scopes, migrate_legacy_users, upgrade_document_lifecycle
@@ -26,7 +26,7 @@ async def lifespan(app):
 
 app = FastAPI(title='J-ERP', version='0.1.0', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=get_settings().allowed_origins, allow_methods=['GET', 'POST', 'PUT', 'DELETE'], allow_headers=['Content-Type', 'X-CSRF-Protection'], allow_credentials=True)
-for router in (auth.router, groups.router, invites.router, documents.router, schedules.router, attachments.router):
+for router in (auth.router, groups.router, invites.router, documents.router, schedules.router, attachments.router, projects.router):
     app.include_router(router, prefix='/api')
 
 

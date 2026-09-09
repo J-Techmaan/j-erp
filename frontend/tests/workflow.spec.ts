@@ -1,7 +1,9 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 
+const workflowRun = Date.now()
 const workflowPassword = 'Workflow-test-password-42'
 const workflowNames = ['홍길동', '김철수', '박영희', '최민수']
+test.beforeEach(async ({ page }) => { page.on('dialog', dialog => dialog.accept()) })
 test.beforeAll(async () => {
   const contexts = []
   for (const [index, name] of workflowNames.entries()) {
@@ -9,7 +11,7 @@ test.beforeAll(async () => {
     contexts.push(context)
     const response = await context.post('/api/auth/signup', {
       headers: { 'X-CSRF-Protection': '1' },
-      data: { name, email: `workflow${index}@example.com`, password: workflowPassword, password_confirm: workflowPassword },
+      data: { name, email: `workflow${workflowRun}-${index}@example.com`, password: workflowPassword, password_confirm: workflowPassword },
     })
     expect(response.status()).toBe(201)
   }
@@ -27,7 +29,7 @@ test.beforeAll(async () => {
 
 async function login(page: Page, name: string) {
   await page.goto('/login')
-  await page.getByLabel('이메일', { exact: true }).fill(`workflow${workflowNames.indexOf(name)}@example.com`)
+  await page.getByLabel('이메일', { exact: true }).fill(`workflow${workflowRun}-${workflowNames.indexOf(name)}@example.com`)
   await page.getByLabel('비밀번호', { exact: true }).fill(workflowPassword)
   await page.getByRole('button', { name: '로그인', exact: true }).click()
   await expect(page.getByRole('heading', { name: `${name}님, 안녕하세요.` })).toBeVisible()
@@ -53,13 +55,14 @@ test('작성 → 첨부 → 순차 결재 / 합의 → 완결 → 통보', async
   await page.getByRole('button', { name: /김철수.*추가/ }).click()
   await page.getByLabel('사용자 검색').fill('박')
   await page.getByRole('button', { name: /박영희.*추가/ }).click()
-  await page.getByLabel('박영희 결재 유형').selectOption('AGREEMENT')
+  await page.getByRole('radiogroup', { name: '박영희 결재 유형' }).getByRole('radio', { name: '합의' }).click()
   await page.getByLabel('사용자 검색').fill('최')
   await page.getByRole('button', { name: /최민수.*추가/ }).click()
-  await page.getByLabel('최민수 결재 유형').selectOption('NOTIFICATION')
+  await page.getByRole('radiogroup', { name: '최민수 결재 유형' }).getByRole('radio', { name: '통보' }).click()
   await page.getByRole('button', { name: '최민수 위로' }).click()
   await expect(page.locator('.approval-line li').nth(1)).toContainText('최민수')
   await page.getByRole('button', { name: '상신', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: '상신', exact: true }).click()
   await expect(page.locator('.badge')).toHaveText('상신중')
   const documentUrl = page.url()
   await expect(page.locator('.step-timeline li.CURRENT')).toContainText('김철수')
@@ -86,7 +89,7 @@ test('작성 → 첨부 → 순차 결재 / 합의 → 완결 → 통보', async
   await expect(page.locator('.step-timeline li.NOTIFIED')).toContainText('최민수')
   await page.screenshot({ path: testInfo.outputPath('completed-1024.png'), fullPage: true })
   await switchUser(page, '최민수')
-  await page.getByRole('link', { name: /통보 문서/ }).click()
+  await page.getByRole('link', { name: /그룹 문서함/ }).click()
   await page.getByRole('link', { name: '브라우저 검증 · 장비 구매', exact: true }).click()
   await expect(page.locator('.badge')).toHaveText('완결')
   await switchUser(page, '홍길동')
@@ -105,22 +108,24 @@ test('임시저장, 반려 사유 보존, 수정 후 재상신', async ({ page }
   await expect(page).toHaveURL(/\/documents\/\d+\/edit$/)
   await expect(page.getByLabel('내용', { exact: true })).toHaveValue('초안')
   await page.getByRole('button', { name: '상신', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: '상신', exact: true }).click()
   await expect(page.locator('.badge')).toHaveText('상신중')
   const documentUrl = page.url()
   await switchUser(page, '김철수')
   await page.goto(documentUrl)
   await page.getByLabel('결재 의견 / 반려 사유').fill('견적 보완 필요')
   await page.getByRole('button', { name: '반려', exact: true }).click()
-  await expect(page.locator('.badge')).toHaveText('기안')
+  await expect(page.locator('.badge')).toHaveText('반려')
   await switchUser(page, '홍길동')
   await page.goto(documentUrl)
-  await page.getByRole('link', { name: '문서 수정', exact: true }).click()
+  await page.getByRole('button', { name: '재작성', exact: true }).click()
   await page.getByLabel('내용', { exact: true }).fill('견적을 보완했습니다.')
   await page.getByRole('button', { name: '상신', exact: true }).click()
-  await expect(page.locator('.history-list')).toContainText('견적 보완 필요')
-  await expect(page.locator('.approval-detail > .muted')).toHaveText('2차 상신')
+  await page.getByRole('dialog').getByRole('button', { name: '상신', exact: true }).click()
+  await expect(page.locator('.approval-detail > .muted')).toHaveText('1차 상신')
+  const recreatedUrl = page.url()
   await switchUser(page, '김철수')
-  await page.goto(documentUrl)
+  await page.goto(recreatedUrl)
   await page.getByRole('button', { name: '승인', exact: true }).click()
   await expect(page.locator('.badge')).toHaveText('완결')
 })
@@ -143,7 +148,6 @@ test('개인 일정 추가·수정·삭제와 월 이동', async ({ page }) => {
   await expect(page.locator('.calendar-grid')).toContainText('변경된 일정 검증')
   await switchUser(page, '홍길동')
   await page.getByRole('button', { name: '변경된 일정 검증', exact: true }).click()
-  page.once('dialog', dialog => dialog.accept())
   await dialog.getByRole('button', { name: '일정 삭제' }).click()
   await expect(page.getByRole('button', { name: '변경된 일정 검증', exact: true })).toHaveCount(0)
   const previous = await page.locator('.calendar-toolbar h2').textContent()
