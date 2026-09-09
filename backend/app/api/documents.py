@@ -22,7 +22,7 @@ def create_document(data: DocumentIn, db: Db, user: CurrentUser, membership: Cur
 
 
 @router.get('/documents', response_model=list[DocumentOut])
-def documents(db: Db, user: CurrentUser, membership: CurrentMembership, scope: Literal['all', 'authored', 'pending', 'history', 'notified'] = 'all', status: DocumentStatus | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100)):
+def documents(db: Db, user: CurrentUser, membership: CurrentMembership, scope: Literal['all', 'group', 'authored', 'pending', 'history', 'notified'] = 'all', status: DocumentStatus | None = None, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100)):
     return list_documents(db, user.id, membership.group_id, scope, status, offset, limit)
 
 

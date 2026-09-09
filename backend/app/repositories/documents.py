@@ -14,9 +14,11 @@ def visible_to(user_id):
 
 
 def get_document(db, document_id, user_id, group_id=None):
-    query = document_query().where(Document.id == document_id, visible_to(user_id))
+    query = document_query().where(Document.id == document_id)
     if group_id is not None:
-        query = query.where(Document.group_id == group_id)
+        query = query.where(Document.group_id == group_id, or_(Document.author_id == user_id, Document.status != DocumentStatus.DRAFT))
+    else:
+        query = query.where(visible_to(user_id))
     doc = db.scalar(query)
     if doc is None:
         raise HTTPException(404, '문서를 찾을 수 없습니다.')
@@ -24,7 +26,11 @@ def get_document(db, document_id, user_id, group_id=None):
 
 
 def list_documents(db, user_id, group_id, scope, status, offset, limit):
-    query = document_query().where(Document.group_id == group_id, visible_to(user_id))
+    query = document_query().where(Document.group_id == group_id)
+    if scope == 'group':
+        query = query.where(or_(Document.author_id == user_id, Document.status != DocumentStatus.DRAFT))
+    else:
+        query = query.where(visible_to(user_id))
     if scope == 'authored':
         query = query.where(Document.author_id == user_id)
     elif scope == 'pending':

@@ -49,7 +49,7 @@ onUnmounted(() => {
       <p class="nav-caption">전자결재</p>
       <RouterLink to="/documents?scope=inbox" :class="{ active: route.query.scope === 'inbox' }"><span>◷</span> 결재함</RouterLink>
       <RouterLink to="/documents?scope=authored" :class="{ active: route.query.scope === 'authored' }"><span>▤</span> 상신함</RouterLink>
-      <RouterLink to="/documents?scope=notified" :class="{ active: route.query.scope === 'notified' }"><span>♧</span> 문서함</RouterLink>
+      <RouterLink to="/documents?scope=group" :class="{ active: ['group', 'notified'].includes(String(route.query.scope)) }"><span>♧</span> 문서함</RouterLink>
       <p class="nav-caption">일정 관리</p>
       <RouterLink to="/calendar" :class="{ active: route.path === '/calendar' }"><span>□</span> 그룹 일정</RouterLink>
       <RouterLink to="/groups/settings" :class="{ active: route.path === '/groups/settings' }"><span>⚙</span> 그룹 관리</RouterLink>
