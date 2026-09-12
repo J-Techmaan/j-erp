@@ -77,3 +77,21 @@ def test_group_admin_permissions_are_scoped(client, users):
     assert client.get(f"/api/groups/{other['id']}/pending", headers=users[1]['headers']).status_code == 403
     assert client.put(path, headers=users[0]['headers'], json={'is_admin': False}).json()['is_admin'] is False
     assert client.get(f'/api/groups/{group_id}/pending', headers=users[1]['headers']).status_code == 403
+
+
+def test_group_search_selection_and_visibility(client, users):
+    owner, member = users[:2]
+    created = client.post('/api/groups', headers=owner['headers'], json={'name': '검색 대상 그룹'}).json()
+    path = '/api/groups/search'
+    client.cookies.clear()
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers=owner['headers']).json() == []
+    expected = [{'id': created['id'], 'name': created['name'], 'code': created['code']}]
+    for term in ['', '검색 대상', created['code'].lower()]:
+        assert client.get(path, headers=member['headers'], params={'q': term}).json() == expected
+    assert client.get(path, headers=member['headers'], params={'q': '%'}).json() == []
+    assert client.post('/api/groups/join', headers=member['headers'], json={'code': expected[0]['code']}).status_code == 201
+    assert client.get(path, headers=member['headers']).json() == []
+    assert client.get(f"/api/groups/{created['id']}", headers=member['headers']).status_code == 403
+    assert client.delete(f"/api/groups/{created['id']}", headers=owner['headers']).status_code == 204
+    assert client.get(path, headers=users[2]['headers']).json() == []

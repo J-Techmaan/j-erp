@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel, StrictBool
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -68,6 +68,26 @@ def groups(db: Db, user: CurrentUser):
         GroupMembership.user_id == user.id, GroupMembership.status == MembershipStatus.ACTIVE,
     ).order_by(GroupMembership.id)).all()
     return [serialize(item.group, item.role) for item in memberships if item.group.is_active]
+
+
+class GroupOption(BaseModel):
+    id: int
+    name: str
+    code: str
+
+
+@router.get('/search', response_model=list[GroupOption])
+def search_groups(db: Db, user: CurrentUser, q: str = Query(default='', max_length=100)):
+    unavailable = select(GroupMembership.group_id).where(
+        GroupMembership.user_id == user.id,
+        GroupMembership.status.in_([MembershipStatus.ACTIVE, MembershipStatus.PENDING]),
+    )
+    query = select(Group).where(Group.is_active.is_(True), Group.id.not_in(unavailable))
+    term = q.strip()
+    if term:
+        query = query.where(Group.name.icontains(term, autoescape=True) | Group.code.icontains(term, autoescape=True))
+    return [GroupOption(id=item.id, name=item.name, code=item.code)
+            for item in db.scalars(query.order_by(Group.name, Group.id).limit(50))]
 
 
 @router.post('', response_model=GroupOut, status_code=201)
