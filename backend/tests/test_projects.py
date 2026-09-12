@@ -45,10 +45,14 @@ def test_project_crud_permissions_and_group_isolation(client, users):
     assert client.get(path, headers=users[0]['headers']).status_code == 404
 
 
-def test_seed_idempotent_and_wbs_tree(client, users):
+def test_seed_new_project_and_wbs_tree(client, users):
     p = client.post('/api/projects/seed/karaoke', headers=users[0]['headers']).json()
-    assert p['project_code'] == 'JTECH-KARAOKE-001'
-    assert client.post('/api/projects/seed/karaoke', headers=users[0]['headers']).json()['id'] == p['id']
+    assert p['project_code'].startswith('PRJ-')
+    second = client.post('/api/projects/seed/karaoke', headers=users[0]['headers']).json()
+    assert second['id'] != p['id']
+    assert second['project_code'] != p['project_code']
+    assert second['project_name'] == p['project_name']
+    assert client.get(f"/api/projects/{p['id']}", headers=users[0]['headers']).json()['project_code'] == p['project_code']
     base = f"/api/projects/{p['id']}"
     wbs = client.get(base + '/wbs', headers=users[0]['headers']).json()
     assert len(wbs) == 14

@@ -54,12 +54,9 @@ def create_project(data: ProjectIn, db: Db, user: CurrentUser, membership: Curre
 
 @router.post('/seed/karaoke', status_code=201)
 def seed(db: Db, user: CurrentUser, membership: CurrentMembership):
-    existing = db.scalar(select(Project).where(Project.group_id == membership.group_id, Project.project_code == 'JTECH-KARAOKE-001'))
-    if existing:
-        if existing.is_deleted:
-            raise HTTPException(409, '보관된 초기 프로젝트가 있습니다. 중복 생성하지 않습니다.')
-        return control.snapshot(existing)
-    project = Project(group_id=membership.group_id, project_code='JTECH-KARAOKE-001',
+    values = {}
+    control.assign_code('projects', values)
+    project = Project(group_id=membership.group_id, **values,
         project_name='코인노래방 1호점 오픈 프로젝트', description='', project_type='OPENING', owner=user.id,
         project_manager=user.id, status='PLANNING', priority='P1', start_date=date(2026, 9, 9),
         target_end_date=date(2027, 3, 15), progress_percent=0, health_status='GREEN', budget=0, actual_cost=0)
