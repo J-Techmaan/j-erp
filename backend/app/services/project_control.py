@@ -13,6 +13,16 @@ from app.repositories.documents import get_document
 from app.services.approvals import commit
 
 
+CODE_FIELDS = {'projects': ('project_code', 'PRJ'), 'wbs': ('wbs_code', 'WBS'),
+               'tasks': ('task_code', 'TASK'), 'milestones': ('milestone_code', 'MS')}
+
+
+def assign_code(kind, data, row=None):
+    if kind in CODE_FIELDS:
+        field, prefix = CODE_FIELDS[kind]
+        data[field] = getattr(row, field) if row is not None else f'{prefix}-{uuid4().hex.upper()}'
+
+
 def snapshot(row):
     result = {column.name: getattr(row, column.name) for column in row.__table__.columns}
     if row.__tablename__ == 'project_risks':
@@ -205,6 +215,7 @@ def write_item(db, project, membership, kind, data, row=None, revision=None, ack
     validate_members(db, project.group_id, data)
     validate_references(db, project, kind, data, membership.user_id, row)
     validate_workflow(db, project, membership, kind, data, row, acknowledge)
+    assign_code(kind, data, row)
     before = snapshot(row) if row else None
     if row is None:
         row = MODELS[kind](project_id=project.id)

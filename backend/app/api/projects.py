@@ -41,6 +41,7 @@ def projects(db: Db, user: CurrentUser, membership: CurrentMembership, offset: i
 @router.post('', status_code=201)
 def create_project(data: ProjectIn, db: Db, user: CurrentUser, membership: CurrentMembership):
     values = data.model_dump()
+    control.assign_code('projects', values)
     values['owner'] = values['owner'] or user.id
     values['project_manager'] = values['project_manager'] or user.id
     control.validate_members(db, membership.group_id, values)
@@ -86,6 +87,7 @@ def update(project_id: int, db: Db, user: CurrentUser, membership: CurrentMember
     control.require_manager(project, membership)
     control.check_revision(project, payload.pop('revision', None))
     data = parse('projects', payload)
+    control.assign_code('projects', data, project)
     control.validate_members(db, membership.group_id, data)
     before = control.snapshot(project)
     for key, value in data.items():

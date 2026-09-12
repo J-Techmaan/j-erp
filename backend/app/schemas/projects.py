@@ -22,7 +22,7 @@ class Input(BaseModel):
 
 
 class ProjectIn(Input):
-    project_code: str = Field(min_length=1, max_length=60, title='프로젝트 코드')
+    project_code: str = Field(default='', max_length=60, title='프로젝트 코드')
     project_name: str = Field(min_length=1, max_length=200, title='프로젝트 이름')
     description: str = Field(default='', max_length=20000, title='설명')
     project_type: str = Field(default='BUSINESS', max_length=50, title='프로젝트 유형')
@@ -52,13 +52,13 @@ class WorkIn(Input):
 
 class WbsIn(WorkIn):
     parent_id: int | None = Field(default=None, title='상위 WBS')
-    wbs_code: str = Field(min_length=1, max_length=60, title='WBS 코드')
+    wbs_code: str = Field(default='', max_length=60, title='WBS 코드')
     actual_end_date: date | None = Field(default=None, title='실제 종료일')
     sort_order: int = Field(default=0, ge=0, title='정렬 순서')
 
 
 class TaskIn(WorkIn):
-    task_code: str = Field(min_length=1, max_length=60, title='업무 코드')
+    task_code: str = Field(default='', max_length=60, title='업무 코드')
     task_type: Literal['TASK', 'SUBTASK', 'ACTION', 'CHECKPOINT'] = Field(default='ACTION', title='업무 유형')
     wbs_id: int | None = Field(default=None, title='WBS')
     parent_task_id: int | None = Field(default=None, title='상위 업무')
@@ -166,7 +166,7 @@ class DecisionIn(Input):
 
 
 class MilestoneIn(Input):
-    milestone_code: str = Field(min_length=1, max_length=60, title='마일스톤 코드')
+    milestone_code: str = Field(default='', max_length=60, title='마일스톤 코드')
     name: str = Field(min_length=1, max_length=200, title='마일스톤 이름')
     planned_date: date | None = Field(default=None, title='계획일')
     forecast_date: date | None = Field(default=None, title='예상일')

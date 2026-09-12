@@ -12,7 +12,8 @@ function select(event: Event, key: string, multiple: boolean) {
   <form class="project-form" @submit.prevent="emit('save')">
     <label v-for="(field, key) in schema.properties" :key="key" :class="{ 'full-width': (field.maxLength || 0) > 2000 }">
       <span>{{ field.title || key }} <span v-if="schema.required?.includes(key)" aria-label="필수">*</span></span>
-      <select :aria-label="field.title || key" v-if="options[key]" :value="modelValue[key]" :multiple="fieldSpec(field).type === 'array'" :required="schema.required?.includes(key)" :disabled="busy" @change="select($event, key, fieldSpec(field).type === 'array')">
+      <input v-if="['project_code', 'wbs_code', 'task_code', 'milestone_code'].includes(key)" :aria-label="field.title || key" :value="modelValue[key] || '저장 시 자동 발급'" readonly />
+      <select :aria-label="field.title || key" v-else-if="options[key]" :value="modelValue[key]" :multiple="fieldSpec(field).type === 'array'" :required="schema.required?.includes(key)" :disabled="busy" @change="select($event, key, fieldSpec(field).type === 'array')">
         <option v-if="fieldSpec(field).type !== 'array'" value="">선택 안 함</option><option v-for="option in options[key]" :key="option.id" :value="option.id">{{ option.name }}</option>
       </select>
       <select :aria-label="field.title || key" v-else-if="fieldSpec(field).enum" :value="modelValue[key]" :disabled="busy" @change="update(key, ($event.target as HTMLSelectElement).value)"><option v-for="value in fieldSpec(field).enum" :key="value" :value="value">{{ projectLabel(value) }}</option></select>

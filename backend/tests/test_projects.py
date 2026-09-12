@@ -203,3 +203,27 @@ def test_supporting_record_crud_and_milestone_completion(client, users):
             assert response.json()['actual_date']
         assert client.delete(path, headers=users[0]['headers'], params={'revision': response.json()['revision']}).status_code == 204
         assert client.get(path, headers=users[1]['headers']).status_code == 404
+
+
+def test_codes_are_generated_and_preserved(client, users):
+    p = project(client, users, 'MANUAL')
+    assert p['project_code'].startswith('PRJ-')
+    other = project(client, users, 'MANUAL')
+    assert other['project_code'] != p['project_code']
+    payload = {key: p[key] for key in SCHEMAS['projects'].model_fields}
+    payload.update(project_code='REPLACE', revision=p['revision'])
+    response = client.put(f"/api/projects/{p['id']}", headers=users[0]['headers'], json=payload)
+    assert response.status_code == 200
+    assert response.json()['project_code'] == p['project_code']
+    for kind, field, prefix, values in [
+        ('wbs', 'wbs_code', 'WBS-', {'title': '자동 WBS'}),
+        ('tasks', 'task_code', 'TASK-', {'title': '자동 액션'}),
+        ('milestones', 'milestone_code', 'MS-', {'name': '자동 마일스톤'}),
+    ]:
+        row = create(client, users, p, kind, values)
+        assert row[field].startswith(prefix)
+        second = create(client, users, p, kind, {**values, field: row[field]})
+        assert second[field] != row[field]
+        changed = update(client, users, p, kind, row, {field: 'REPLACE'})
+        assert changed.status_code == 200
+        assert changed.json()[field] == row[field]
